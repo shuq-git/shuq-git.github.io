@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang = 'en'>
+    <head>
+        <meta charset="utf-8">
+        <title>Inmate Deaths from COVID-19 by State</title>
+        
+        <script 
+        type = 'text/javascript'
+        src='https://d3js.org/d3.v5.min.js'>
+        </script>
+
+        <script 
+        src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js">
+        </script>
+
+        <style type ='text/css'> 
+                
+                rect {fill: goldenrod;}
+                
+                rect:hover{fill: darkorange;}
+
+                #tooltip{
+                position: absolute;
+                width: 200px;
+                height: auto;
+                padding: 10px;
+                background-color: lightcoral;
+                -webkit-border-radius: 10px;
+                -moz-border-radius: 10px;
+                border-radius: 10px;
+                -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+  
+                            }
+
+        </style>
+                    
+    </head>
+
+    <body onload='init()'>
+        <h1>Total Number of Inmate Deaths from COVID-19 by State</h1>
+        <h3>What was the total number of inmate deaths per state during the period of March 2020 to March 2021? </h3>
+        <div>
+            <a href = ""> 
+                <button> Next Scene </button>
+            </a>
+        </div>
+       
+<svg width=2000 height=2000></svg>
+<div id = "tooltip"></div>
+<script>
+async function init() {
+
+var width = 1000;
+var height = 700;
+var margin = 70;
+
+
+
+const data = await d3.csv("https://shuq-git.github.io/systems.csv");
+
+
+//Create the scales
+var xScale = d3.scaleBand().domain(data.map(function(d){return d.system;})).range([0, 1000]);
+var yScale = d3.scaleLinear().domain([0, 120000]).range([700, 0]);
+
+//Create the tooltip
+var tooltip = d3.select("#tooltip");
+
+//Create the annotation label
+const type = d3.annotationLabel;
+const annotations = [{
+    note:{
+        label: "Texas incarcerated the most people, and its death toll of prisoners from COVID-19 is comparable to California and Florida.",
+        bgPadding: 20,
+        title: "Texas"
+        },
+        x: 910,
+        y: 50,
+        dy: 100,
+        dx: -100
+
+        }];
+
+//Create the annotation variable
+ const makeAnnotations = d3.annotation().annotations(annotations);
+
+
+//Create the svg
+d3.select('svg')
+ .attr('width', width + 2*margin)
+ .attr('height', height + 2*margin)
+ .append('g')
+  .attr("transform","translate(" + margin + "," + margin + ")")
+  .selectAll('rect')
+  .data(data)
+  .enter()
+  .append('rect')
+        .attr("x", function(d) {return xScale(d.system);})
+        .attr("y", function(d) {return yScale(d.max_inmate_population_2020);})
+        .attr("width", 15)
+        .attr("height", function(d){return height - yScale(d.max_inmate_population_2020);})
+
+        
+        
+
+    //Mouseover function
+    .on("mouseover", function(d, i){
+
+        tooltip.style("opacity", 1)
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY) + "px")
+                .html("Max population of inmates in " + d.system + " was "+ d.max_inmate_population_2020 + ", and the number of total deaths was " + d.total_inmate_deaths);
+        
+
+        })
+    .on("mouseout", function(){tooltip.style("opacity", 0)})
+
+//Add axes
+d3.select('svg')
+  .append('g')
+  .attr("transform","translate(" + margin + "," + margin + ")")
+  .call(d3.axisLeft(yScale));
+
+d3.select('svg')
+  .append('g')
+  .attr("transform","translate(" + margin + "," + (height+margin) + ")")
+  .call(d3.axisBottom(xScale))
+  .selectAll("text")  
+     .style("text-anchor", "end") //Rotate the text of the x-axis
+     .attr("dx", "-.8em")
+     .attr("dy", ".15em")
+     .attr("transform", "rotate(-65)");
+
+//Add titles of axes
+//d3.select('svg').append("text").attr("text-anchor", "end").attr("x", width/2).attr("y", height + margin + 30).text("States");
+
+
+d3.select('svg')
+    .append("text")
+        .attr("text-anchor", "end")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 20)
+        .attr("x", -250)
+        .text("Inmate Population");
+
+//Need to make a click function to go to the next scene    
+
+//Append the annotations to the graph
+d3.select("svg")
+    .append("g")
+    .attr("class", "annotation-group")
+    .call(makeAnnotations);
+
+
+
+
+}
+</script>
+</body>
+</html>
