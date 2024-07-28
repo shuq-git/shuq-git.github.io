@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang = 'en'>
+    <head>
+        <meta charset="utf-8">
+        <title>Inmate Deaths from COVID-19 by State</title>
+        
+        <script 
+        type = 'text/javascript'
+        src='https://d3js.org/d3.v5.min.js'>
+        </script>
+
+        <script 
+        src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js">
+        </script>
+
+        <style type ='text/css'> 
+                
+                circle {fill:lightseagreen; stroke: darkcyan;}
+                
+                circle:hover{fill: lightgreen;}
+
+                #tooltip{
+                position: absolute;
+                width: 200px;
+                height: auto;
+                padding: 10px;
+                background-color: lightcoral;
+                -webkit-border-radius: 10px;
+                -moz-border-radius: 10px;
+                border-radius: 10px;
+                -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+  
+                            }
+
+                button{
+                    background-color: palevioletred;
+                    color: white;
+                    border: none;
+                    height: 35px;
+                    width: 90px;
+                    font-weight: bold;
+                    font-size: 15px;
+                    cursor: pointer;
+                    float: left;
+                    border: 1px solid rgb(204, 60, 204);
+
+                }
+
+        </style>
+                    
+    </head>
+
+    <body onload='init()'>
+        <h1>Total Number of Inmate Deaths from COVID-19 by State</h1>
+        <h3>What was the total number of inmate deaths per state during the period of March 2020 to March 2021? </h3>
+        <div>
+            <a href = "https://shuq-git.github.io/index_Scene_3"> 
+                <button> Previous Scene </button>
+            </a>
+        </div>
+
+        <div>
+            <a href ="https://shuq-git.github.io">
+                <button> Beginning </button>
+            </a> </div>
+    
+<svg width=2000 height=2000></svg>
+<div id = "tooltip"></div>
+<script>
+async function init() {
+
+var width = 700;
+var height = 700;
+var margin = 70;
+
+
+
+const data = await d3.csv("https://shuq-git.github.io/systems.csv");
+
+
+//Create the scales
+var xScale = d3.scaleLinear().domain([0, 250]).range([0, 700]); //total deaths
+var yScale = d3.scaleLinear().domain([0, 170000]).range([700, 0]); //total inmate population
+
+//Create the tooltip
+var tooltip = d3.select("#tooltip");
+
+//Create the annotation label
+const type = d3.annotationLabel;
+const annotationsFlorida = [{
+    note:{
+        label: "Florida imprisoned fewer inmates but suffered the highest death toll.",
+        bgPadding: 20,
+        title: "Florida"
+        },
+        x: 670,
+        y: 370,
+        dy: 70,
+        dx: -100
+
+        }];
+const annotationsTexas = [{
+    note:{
+        label: "Texas incarcerated the most people, yet its death toll was marginally lower than California and Florida.",
+        bgPadding: 20,
+        title: "Texas"
+        },
+        x: 630,
+        y: 100,
+        dy: 30,
+        dx: -100
+}];
+
+const annotationsCali = [{
+    note:{
+        label: "California's death toll was only marginally lower than Florida's, despite incarcerating more people.",
+        bgPadding: 100,
+        title: "California"
+        },
+        x: 660,
+        y: 280,
+        dy: 50,
+        dx: -200
+
+        }];
+
+//Create the annotation variable
+ const makeAnnotationsFlo = d3.annotation().annotations(annotationsFlorida);
+ const makeAnnotationsTex = d3.annotation().annotations(annotationsTexas);
+ const makeAnnotationsCali = d3.annotation().annotations(annotationsCali);
+
+
+//Create the svg
+d3.select('svg')
+ .attr('width', width + 2*margin)
+ .attr('height', height + 2*margin)
+ .append('g')
+  .attr("transform","translate(" + margin + "," + margin + ")")
+  .selectAll('circle')
+  .data(data)
+  .enter()
+  .append('circle')
+        .attr("cx", function(d){return xScale(d.total_inmate_deaths);})
+        .attr("cy", function(d) {return yScale(d.max_inmate_population_2020);})
+        .attr("r", 15)
+
+        
+
+    //Mouseover function
+    .on("mouseover", function(d, i){
+
+        tooltip.style("opacity", 1)
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY) + "px")
+                .html("Total deaths in " + d.system + " was "+ d.total_inmate_deaths);
+        
+
+        })
+    .on("mouseout", function(){tooltip.style("opacity", 0)})
+
+//Add axes
+d3.select('svg')
+  .append('g')
+  .attr("transform","translate(" + margin + "," + margin + ")")
+  .call(d3.axisLeft(yScale));
+
+d3.select('svg')
+  .append('g')
+  .attr("transform","translate(" + margin + "," + (height+margin) + ")")
+  .call(d3.axisBottom(xScale))
+  .selectAll("text")  
+     .style("text-anchor", "end") //Rotate the text of the x-axis
+     .attr("dx", "-.8em")
+     .attr("dy", ".15em")
+     .attr("transform", "rotate(-65)");
+
+//Add titles of axes
+//d3.select('svg').append("text").attr("text-anchor", "end").attr("x", width/2).attr("y", height + margin + 30).text("States");
+
+
+d3.select('svg')
+    .append("text")
+        .attr("text-anchor", "end")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 20)
+        .attr("x", -250)
+        .text("Inmate Deaths");
+
+  
+
+//Append the annotations to the graph
+d3.select("svg")
+    .append("g")
+    .attr("class", "annotation-group")
+    .call(makeAnnotationsFlo);
+
+d3.select("svg")
+    .append("g")
+    .attr("class", "annotation-group")
+    .call(makeAnnotationsTex);
+
+d3.select("svg")
+    .append("g")
+    .attr("class", "annotation-group")
+    .call(makeAnnotationsCali);
+    
+
+}
+</script>
+</body>
+</html>
